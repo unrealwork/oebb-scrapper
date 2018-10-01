@@ -1,0 +1,12 @@
+{
+  "atsd": {
+    "scheme": "https",
+    "server": "nur.axibase.com",
+    "port": 443,
+    "credentials": {
+      "username": "igor.shmagrinsky",
+      "password": "newLife2018_"
+    }
+  },
+  "cron": "*/15 * * * *"
+}
