@@ -9,7 +9,7 @@ export class  TrainScrapeTask {
     private readonly entity: string;
 
     constructor(config: IAppConfig) {
-        this.client = new OebbClient();
+        this.client = new OebbClient(config.isCollectHistory);
         this.atsdClient = new AtsdClient(config.atsd);
         this.entity = config.entity;
     }

@@ -1,5 +1,5 @@
 import axios, {AxiosRequestConfig} from "axios";
-import {formatDate, logger, prettyPrint} from "./util";
+import {flushTrainInfo, formatDate, logger, prettyPrint} from "./util";
 
 const iconv = require("iconv-lite");
 
@@ -27,6 +27,11 @@ export class OebbClient {
     }
 
     private readonly baseUrl: string = "http://zugradar.oebb.at/bin/query.exe/eny";
+    private readonly isCollectHistory: boolean;
+
+    constructor(isCollectHistory: boolean) {
+        this.isCollectHistory = isCollectHistory;
+    }
 
     public trainsList(req: ITrainsRequest): Promise<ITrain[]> {
 
@@ -56,7 +61,9 @@ export class OebbClient {
             }).then(decode)
             .then((resp) => {
                 const data = resp.data;
-                // flushTrainInfo(data, train.id, date);
+                if (this.isCollectHistory) {
+                    flushTrainInfo(data, train.id, date);
+                }
                 return {
                     id: train.id,
                     locations: data.locations,

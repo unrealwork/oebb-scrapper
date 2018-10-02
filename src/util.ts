@@ -15,6 +15,7 @@ export function flushTrainInfo(data: any, id: string, date: Date): void {
         const filePath =
             `data/${formatDate(date)}/${data.name}/${id}/train-info-${date.getHours()}-${date.getMinutes()}`;
         const dirPath = dirname(filePath);
+        logger.debug(dirPath);
         if (!existsSync(dirPath)) {
             mkdir("-p", dirPath);
         }
@@ -58,6 +59,7 @@ if (process.env.NODE_ENV !== "production") {
 
 export interface IAppConfig {
     atsd: IAtsdClientConfig;
+    isCollectHistory: boolean;
     entity: string,
     cron: string;
 }
@@ -100,7 +102,8 @@ export function getAppConfig(): IAppConfig {
         .option("host", "The hostname of ATSD instance", "localhost")
         .option("username", "The username to access ATSD instance API", "username")
         .option("password", "The password to access ATSD instance API", "password")
-        .option("entity", "The Atsd entity which is stored data", "oebb");
+        .option("entity", "The Atsd entity which is stored data", "oebb")
+        .option("history", "Collect history of scraped json files", false);
 
     const flags = args.parse(process.argv);
 
@@ -114,7 +117,8 @@ export function getAppConfig(): IAppConfig {
             scheme: "https",
             server: flags.host,
         },
-        entity: flags.entity,
         cron: process.env.SCRAPE_CRON ? process.env.SCRAPE_CRON : "*/15 * * * *",
+        entity: flags.entity,
+        isCollectHistory: flags.history,
     };
 }
