@@ -2,6 +2,7 @@ import axios, {AxiosRequestConfig} from "axios";
 import {formatDate, logger, prettyPrint} from "./util";
 
 const iconv = require("iconv-lite");
+
 export class OebbClient {
     private static BASE_CONFIG: AxiosRequestConfig = {
         headers: {
@@ -100,7 +101,7 @@ const decode = (response) => {
         const output = iconv.decode(response.data, "ISO-8859-1");
         response.data = JSON.parse(output);
     } else {
-        response.data = JSON.parse(response.data);
+        response.data = JSON.parse(iconv.decode(response.data, "UTF-8"));
     }
     return response;
-}
+};

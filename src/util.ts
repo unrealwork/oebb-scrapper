@@ -1,4 +1,5 @@
-import {existsSync, readFileSync, writeFileSync} from "fs";
+import * as args from "args";
+import {existsSync, writeFileSync} from "fs";
 import {dirname} from "path";
 import {mkdir} from "shelljs";
 import {createLogger, format, transports} from "winston";
@@ -57,21 +58,23 @@ if (process.env.NODE_ENV !== "production") {
 
 export interface IAppConfig {
     atsd: IAtsdClientConfig;
+    entity: string,
     cron: string;
 }
-export function toBatch(t: ITrainInfo, date: Date): string[] {
+
+export function toBatch(t: ITrainInfo, date: Date, entity: string): string[] {
     const result: string[] = [];
     if (t.locations) {
         for (const loc of t.locations) {
             const utcdate = utcDate(date);
-            if (loc.depTime) {
-                result.push(`series e:oebb ${typeof loc.depTimeProgMinutes === "number" ?
-                    `m:departure_offset_minutes=${loc.depTimeProgMinutes}` : ""} t:number="${t.number}"` +
+            if (loc.depTime && typeof loc.depTimeProgMinutes === "number") {
+                result.push(`series e:${entity} m:departure_offset_minutes=${loc.depTimeProgMinutes} ` +
+                    `t:number="${t.number}" ` +
                     `t:id="${t.id}" x:departure_offset_minutes="${loc.name}" d:${utcdate}T${loc.depTime}:00+02:00`);
             }
-            if (loc.arrTime) {
-                result.push(`series e:oebb ${typeof loc.arrTimeProgMinutes === "number" ?
-                    `m:arrival_offset_minutes=${loc.arrTimeProgMinutes}` : ""} t:number="${t.number}"` +
+            if (loc.arrTime && typeof loc.arrTimeProgMinutes === "number") {
+                result.push(`series e:${entity} m:arrival_offset_minutes=${loc.arrTimeProgMinutes}` +
+                    ` t:number="${t.number}" ` +
                     `t:id="${t.id}" x:arrival_offset_minutes="${loc.name}" d:${utcdate}T${loc.arrTime}:00+02:00`);
             }
 
@@ -90,4 +93,28 @@ export function utcDate(date: Date): string {
     }
 
     return `${year}-${leadingZero(month)}-${leadingZero(day)}`;
+}
+
+export function getAppConfig(): IAppConfig {
+    args.option("port", "The port of ATSD instance", 443)
+        .option("host", "The hostname of ATSD instance", "localhost")
+        .option("username", "The username to access ATSD instance API", "username")
+        .option("password", "The password to access ATSD instance API", "password")
+        .option("entity", "The Atsd entity which is stored data", "oebb");
+
+    const flags = args.parse(process.argv);
+
+    return {
+        atsd: {
+            credentials: {
+                password: flags.password,
+                username: flags.username,
+            },
+            port: flags.port,
+            scheme: "https",
+            server: flags.host,
+        },
+        entity: flags.entity,
+        cron: process.env.SCRAPE_CRON ? process.env.SCRAPE_CRON : "*/15 * * * *",
+    };
 }
