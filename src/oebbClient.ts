@@ -94,6 +94,7 @@ export interface ITrainInfo {
 }
 
 export interface ILocation {
+    currentpos: boolean;
     stationIdx: number;
     name: string;
     depTime: string;

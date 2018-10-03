@@ -3,7 +3,7 @@ import {AtsdClient, IAtsdClientConfig} from "./atsdClient";
 import {ITrain, OebbClient} from "./oebbClient";
 import {IAppConfig, logger, prettyPrint, toBatch} from "./util";
 
-export class  TrainScrapeTask {
+export class TrainScrapeTask {
     private readonly client: OebbClient;
     private readonly atsdClient: AtsdClient;
     private readonly entity: string;
@@ -28,7 +28,7 @@ export class  TrainScrapeTask {
             logger.info(`Scrapping start time: ${date.toISOString()}`);
             logger.debug(`Active trains: ${prettyPrint(trains)}`);
             axios.all(trains.map((t: ITrain) => this.client.getInfo(t, date).catch((err) => {
-                logger.error(`Failed to get info for train: ${prettyPrint(t)}. Reason: ${prettyPrint(err)}`);
+                logger.error(`Failed to get info for train: ${prettyPrint(t)}. Reason: ${err.toString()}`);
                 return null;
             })))
                 .then((values) => {
@@ -42,6 +42,6 @@ export class  TrainScrapeTask {
                         .catch((err) =>
                             logger.error(`Failed to send batch of commands! ${err.toString()}`));
                 });
-        }).catch((err) => logger.error(`Failed to get train list ${prettyPrint(err)}`));
+        }).catch((err) => logger.error(`Failed to get train list ${err.toString()}`));
     }
 }

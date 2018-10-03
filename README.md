@@ -14,5 +14,5 @@ docker build -t oebb-scraper . && docker run -d \
     --password password \
     --host atsd_host \
     --entity oebb.at \
-    --history
+    --history   
 ```

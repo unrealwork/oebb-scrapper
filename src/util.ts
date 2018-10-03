@@ -15,7 +15,6 @@ export function flushTrainInfo(data: any, id: string, date: Date): void {
         const filePath =
             `data/${formatDate(date)}/${data.name}/${id}/train-info-${date.getHours()}-${date.getMinutes()}`;
         const dirPath = dirname(filePath);
-        logger.debug(dirPath);
         if (!existsSync(dirPath)) {
             mkdir("-p", dirPath);
         }
@@ -67,19 +66,25 @@ export interface IAppConfig {
 export function toBatch(t: ITrainInfo, date: Date, entity: string): string[] {
     const result: string[] = [];
     if (t.locations) {
-        for (const loc of t.locations) {
-            const utcdate = utcDate(date);
-            if (loc.depTime && typeof loc.depTimeProgMinutes === "number") {
-                result.push(`series e:${entity} m:departure_offset_minutes=${loc.depTimeProgMinutes} ` +
-                    `t:number="${t.number}" ` +
-                    `t:id="${t.id}" x:departure_offset_minutes="${loc.name}" d:${utcdate}T${loc.depTime}:00+02:00`);
-            }
-            if (loc.arrTime && typeof loc.arrTimeProgMinutes === "number") {
-                result.push(`series e:${entity} m:arrival_offset_minutes=${loc.arrTimeProgMinutes}` +
-                    ` t:number="${t.number}" ` +
-                    `t:id="${t.id}" x:arrival_offset_minutes="${loc.name}" d:${utcdate}T${loc.arrTime}:00+02:00`);
-            }
+        const currentPosition = t.locations.find((l) => l.currentpos);
+        if (currentPosition) {
+            const currentIndex = t.locations.indexOf(currentPosition);
+            const startIndex = currentIndex > 0 ? currentIndex - 1 : currentIndex;
+            const locationsToPut = t.locations.slice(startIndex);
+            for (const loc of locationsToPut) {
+                const utcdate = utcDate(date);
+                if (loc.depTime && typeof loc.depTimeProgMinutes === "number") {
+                    result.push(`series e:${entity} m:departure_offset_minutes=${loc.depTimeProgMinutes} ` +
+                        `t:number="${t.number}" ` +
+                        `t:id="${t.id}" x:departure_offset_minutes="${loc.name}" d:${utcdate}T${loc.depTime}:00+02:00`);
+                }
+                if (loc.arrTime && typeof loc.arrTimeProgMinutes === "number") {
+                    result.push(`series e:${entity} m:arrival_offset_minutes=${loc.arrTimeProgMinutes}` +
+                        ` t:number="${t.number}" ` +
+                        `t:id="${t.id}" x:arrival_offset_minutes="${loc.name}" d:${utcdate}T${loc.arrTime}:00+02:00`);
+                }
 
+            }
         }
     }
     return result;
